@@ -94,16 +94,6 @@
 
 
 ### Example
-~~~~
-#Calling function with json argument
-raguramv@rushmore:/mnt/max/shared/projects/file_mapper$ python file_mapper_script.py /mnt/max/shared/projects/file_mapper/testdata.json -a copy -dp /mnt/max/shared/projects/file_mapper_2.0/ -vb
-Optional DESTINATION argument: /mnt/max/shared/projects/file_mapper_2.0/ overrules destination: /mnt/max/shared/projects/file_mapper_2.0
-Path has been made: /mnt/max/shared/projects/file_mapper/important_files2
-Path has been made: /mnt/max/shared/projects/file_mapper/important_files3
-
-raguramv@rushmore:/mnt/max/shared/projects/file_mapper$ ls
-file_mapper  file_mapper_script.py  important_files  important_files2  important_files3  README.md  testdata.json
-~~~~
 
 ~~~~
 ##Call function with relative path to json and action for mapping along verbose mode to show print statements
