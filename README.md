@@ -42,7 +42,6 @@
   * If the JSON is not properly written the console will display an error message: ***`Invalid json: error`***
 
 
-
 ### Example
 
 ~~~~
