@@ -20,75 +20,25 @@
 
 ### Usage of Script
 1. Make sure that the JSON file that is being interpreted takes paths as its keys and values  
-
   * If the keys/values are relative paths, make sure a SOURCE key and a DESTINATION key so that their full paths can be provided.
-
   * If the keys/values are absolute paths the file will run normally.
-
 2. To run the file, call ***`python file_mapper_script.py [absolute path to the JSON file] -a [The choice of 3 actions copy/move/symlink]`***  
-
   * The absolute path to the JSON file needs to be provided without a tag so the program can locate the file to process.
-
   * The -a (--action) tag allows the user to choose between moving, copying, or symlinking.  
-
       - The default is to copy
-
   * If the path has already been made, and an overwrite is needed, add the -o (--overwrite) tag.
-
   * If the overwrite is not provided and the file already exists then the console wil display ***`Destination file already exists [absolute path to the file]`***  
-
   * If overwrite is successfull then the console will display ***`file has been overwritten`***
-
   * If errors are to be skipped, the -s (--skip-errors) tag will skip errors and proceed to run the program.  
-
   * If a custom SOURCE or DESTINATION for the JSON file and its contents is required:
-
       - The -sp (--sourcepath) tag and the -dp (--destpath) tag allows the user to input a custom SOURCE or DESTINATION
-
       - The provided roots will overwrite the given roots in the JSON file and provide this message: `'Optional DESTINATION argument: 'path of the provided dest +' overrules destination: ' + initial given dest`
-
   * A verbose tag (-vb (--verbose)) can be used to display the print statements when the program is run.
-
       - Without the -vb tag the program will run without displaying any messages to the console
-
   * The testdebug tag (-td (--testdebug)) can be used to display to the console what the code does without executing it
-
       - The -td tag works with overwrite statements as well, displaying ***`overwrite_string + action + ': ' + src + ' -> ' + dest`***
-
   * If the keys/values are absolute paths the file will run normally.
-
-2. To run the file, call ***`python file_mapper_script.py [absolute path to the JSON file] -a [The choice of 3 actions copy/move/symlink]`***  
-
-  * The absolute path to the JSON file needs to be provided without a tag so the program can locate the file to process.
-
-  * The -a (--action) tag allows the user to choose between moving, copying, or symlinking.  
-
-      - The default is to copy
-
-  * If the path has already been made, and an overwrite is needed, add the -o (--overwrite) tag.
-
-  * If the overwrite is not provided and the file already exists then the console wil display ***`Destination file already exists [absolute path to the file]`***  
-
-  * If overwrite is successfull then the console will display ***`file has been overwritten`***
-
-  * If errors are to be skipped, the -s (--skip-errors) tag will skip errors and proceed to run the program.  
-
-  * If a custom SOURCE or DESTINATION for the JSON file and its contents is required:
-
-      - The -sp (--sourcepath) tag and the -dp (--destpath) tag allows the user to input a custom SOURCE or DESTINATION
-
-      - The provided roots will overwrite the given roots in the JSON file and provide this message: `'Optional DESTINATION argument: 'path of the provided dest +' overrules destination: ' + initial given dest`
-
-  * A verbose tag (-vb (--verbose)) can be used to display the print statements when the program is run.
-
-      - Without the -vb tag the program will run without displaying any messages to the console
-
-  * The testdebug tag (-td (--testdebug)) can be used to display to the console what the code does without executing it
-
-      - The -td tag works with overwrite statements as well, displaying ***`overwrite_string + action + ': ' + src + ' -> ' + dest`***
-      
 3. If the file runs without error, the console will display a message for each path made: ***`Path has been made: (absolute path of file created)`***
-
   * If the JSON is not properly written the console will display an error message: ***`Invalid json: error`***
 
 
