@@ -3,6 +3,7 @@
 import sys
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import *
+from PyQt4 import QtGui
 
 # create our window
 app = QApplication(sys.argv)
@@ -32,9 +33,9 @@ button2.move(500,105)
 # Create the actions
 @pyqtSlot()
 def on_click(self):
-    QtGui.QMainWindow.on_click(self)
-
-    layout = QtGui.QVBoxLayout(self)
+    # QtGui.QMainWindow.on_click(self)
+    #
+    # layout = QtGui.QVBoxLayout(self)
 
     # Add checkable directory tree defined in CheckableDirModel
     model = CheckableDirModel()
