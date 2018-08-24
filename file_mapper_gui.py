@@ -1,6 +1,9 @@
 #! /usr/bin/python3
 
+#GUI Which helps the user to select files to be mapped and creates a JSON file
 
+#Vasu Raguram 
+#Version 1.0.0
 
 import sys
 import os
