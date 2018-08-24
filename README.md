@@ -7,15 +7,41 @@
 
 
 ### Usage of GUI
-1. Call the ***`file_mapper_gui`*** using the command ***`python file_mapper_gui`***
+1. Call the ***`file_mapper_gui`*** using the command ***`python file_mapper_gui`*** 
 2. A popup window should emerge and the window prompts the user to select a folder to either copy, move, or symlink files
+
+![Initial Window](images/window1.png)
+
 3. Once the folder is selected, the open button should be pressed to move to the next stage of the GUI
+
+
 4. A second window will emerge prompting the user to select individual files in the selected folder to add to the JSON.
+
+![Checkbox Window](images/window2.png)
+
 5. Once desired files/folders are selected and the OK button has been pressed, another window will pop up
+
+![Checkbox Window 2](images/window2check.png)
+
 6. The final window prompts the user to name the JSON file that will be interpreted by the file_mapper_script
-    * Note; when naming if "**.json**" is not added to the end of the name it will automatically be added by the ***`file_mapper_gui`***
+
+![Final Window](images/window3.png)
+
+   Note; when naming if "**.json**" is not added to the end of the name it will automatically be added by the file_mapper_gui
+   
+   
 7. Once naming is complete, press the save button and a popup will notify the user that ***`JSON created successfully`***
-    * If an error arises, the GUI will display ***`JSON creation process was not successful. Please try again.`****
+   
+ ![Success](images/creation.png)
+ 
+ * If the JSON exists and is being overwritten then another popup will be displayed. 
+ 
+ ![Replacement](images/replace.png)
+ 
+ * If an error arises, the GUI will display ***`JSON creation process was not successful. Please try again.`****
+
+
+
 
 
 ### Usage of Script
