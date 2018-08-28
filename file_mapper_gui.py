@@ -2,7 +2,7 @@
 
 #GUI Which helps the user to select files to be mapped and creates a JSON file
 
-#Vasu Raguram 
+#Vasu Raguram
 #Version 1.0.0
 
 import sys
@@ -30,18 +30,19 @@ class SelectionWindow(QtGui.QDialog):
         layout = QtGui.QVBoxLayout(self)
 
         # Add checkable directory tree defined in CheckableDirModel
-        model = CheckableDirModel()
+        self.model = CheckableDirModel()
+        # model = DestinationWindow()
         self.view = QtGui.QTreeView()
-        self.view.setModel(model)
+        self.view.setModel(self.model)
 
         # Make window resize to contents
-	self.view.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
+        self.view.header().setResizeMode(QtGui.QHeaderView.ResizeToContents)
         self.view.header().setStretchLastSection(False)
 
         # Set root directory to example path chosen earlier by user
-        self.view.setRootIndex(model.index(example_path))
-	#/mnt/max/shared/code/internal/utilities/custom_clean
-	# Set appearance of SelectionWindow object
+        self.view.setRootIndex(self.model.index(example_path))
+        #/mnt/max/shared/code/internal/utilities/custom_clean
+        # Set appearance of SelectionWindow object
         self.resize(1000, 500)
         self.setWindowTitle("Choose Items to Copy/Move/Symlink")
         layout.addWidget(self.view)
@@ -50,9 +51,14 @@ class SelectionWindow(QtGui.QDialog):
         buttons = QtGui.QDialogButtonBox(
             QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel,
             QtCore.Qt.Horizontal, self)
-        buttons.accepted.connect(model.makeJSON)
+        buttons.accepted.connect(self.open_dest)
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
+
+    def open_dest(self):
+        destwindow = DestinationWindow()
+        destwindow.show()
+
 
 class CheckableDirModel(QtGui.QDirModel):
     """Model that populates SelectionWindow with a checkable directory tree."""
@@ -147,11 +153,58 @@ class CheckableDirModel(QtGui.QDirModel):
         # Make all windows disappear after end message window is closed
         QtCore.QCoreApplication.instance().quit()
 
+class DestinationWindow(QWidget):
+    # create our window
+    # app = QApplication(sys.argv)
+    def __init__(self, parent=None):
+        QWidget.__init__(self)
+
+        self.setWindowTitle('Choose destination for selected key')
+
+        # Create textbox
+        textbox1 = QLineEdit(self)
+        textbox1.move(170, 20)
+        textbox1.resize(280,40)
+        textbox1.setText("/")
+
+        textbox2 = QLineEdit(self)
+        textbox2.move(170, 100)
+        textbox2.resize(280,40)
+
+        # Set window size.
+        self.resize(650, 500)
+
+        # Create a button in the window
+        button1 = QPushButton('Browse', self)
+        button1.move(500,25)
+
+        button2 = QPushButton('Browse', self)
+        button2.move(500,105)
+
+        button1.clicked.connect(self.on_click)
+        button2.clicked.connect(self.on_click)
+
+        #OKbutton.accepted.connect(model.makeJSON)
+
+        # self.show()
+
+        # # Show the window and run the app
+        # w.show()
+        # app.exec_()
+
+    def on_click(self):
+        folder1 = QFileDialog.getExistingDirectory(QWidget(), 'Open Folder', '/')
+        textbox1.setText(folder1)
+
+
+
 if __name__ == '__main__':
 
     app = QtGui.QApplication(sys.argv)
 
     anchor_win = QMainWindow()
+
+    # widget = win.show()
 
     # Allow user to choose directory to populate checkable directory model
     example_path = str(QFileDialog.getExistingDirectory(anchor_win, 'Select Example Directory'))
