@@ -3,6 +3,7 @@
 import sys
 from PyQt4.QtGui import *
 from PyQt4 import QtGui
+from PyQt4 import QtCore
 
 
 def on_click(self):
@@ -42,16 +43,28 @@ for b in range(num):
 
 for bc in button:
     bc.clicked.connect(on_click)
+
+
+buttonWidget = QWidget()
+
 layout = QVBoxLayout()
 AbsButton = QRadioButton("Absolute Path")
 RelButton = QRadioButton("Relative Path")
-RadioGroup= QButtonGroup(w)
+RadioGroup= QButtonGroup(buttonWidget)
 RadioGroup.addButton(AbsButton)
 RadioGroup.addButton(RelButton)
 RadioGroup.setExclusive(True)
-# layout.move(500,400)
+buttonWidget.move(30,20)
+buttonWidget.resize(180,80)
 layout.addWidget(AbsButton)
 layout.addWidget(RelButton)
+
+
+
+buttons = QtGui.QDialogButtonBox(
+    QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel,
+    QtCore.Qt.Horizontal)
+
 
 # Show the window and run the app
 w.show()

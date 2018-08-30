@@ -5,6 +5,7 @@
 #Vasu Raguram
 #Version 1.0.0
 
+#Import the necesarry libraries for the GUI to run.
 import sys
 import os
 import json
@@ -13,6 +14,7 @@ from PyQt4 import QtCore
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
+#Define the parent and child relationship that connects all of the aspects of the GUI
 def are_parent_and_child(parent, child):
     while child.isValid():
         if child == parent:
@@ -20,10 +22,8 @@ def are_parent_and_child(parent, child):
         child = child.parent()
     return False
 
-
+#First window to open that allows the user to choose the files/directories to be mapped
 class SelectionWindow(QtGui.QDialog):
-    """GUI window where user selects items to be deleted in the chosen directory."""
-
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
 
@@ -41,7 +41,7 @@ class SelectionWindow(QtGui.QDialog):
 
         # Set root directory to example path chosen earlier by user
         self.view.setRootIndex(self.model.index(example_path))
-        #/mnt/max/shared/code/internal/utilities/custom_clean
+        #/mnt/max/shared/code/internal/utilities/file_mapper
         # Set appearance of SelectionWindow object
         self.resize(1000, 500)
         self.setWindowTitle("Choose Items to Copy/Move/Symlink")
@@ -66,7 +66,6 @@ class CheckableDirModel(QtGui.QDirModel):
         QtGui.QDirModel.__init__(self, None)
         self.checks = {}
 
-
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if role == QtCore.Qt.CheckStateRole and index.column() == 0:
             return self.checkState(index)
@@ -76,7 +75,7 @@ class CheckableDirModel(QtGui.QDirModel):
     def flags(self, index):
         return QtGui.QDirModel.flags(self, index) | QtCore.Qt.ItemIsUserCheckable
 
-
+    #Code which verifies if the boxex are checked or not
     def checkState(self, index):
         while index.isValid():
             if index in self.checks:
@@ -84,7 +83,7 @@ class CheckableDirModel(QtGui.QDirModel):
             index = index.parent()
         return QtCore.Qt.Unchecked
 
-
+    #Sets the value of the checkboxes for interpretation
     def setData(self, index, value, role):
         if role == QtCore.Qt.CheckStateRole and index.column() == 0:
             self.layoutAboutToBeChanged.emit()
@@ -97,7 +96,7 @@ class CheckableDirModel(QtGui.QDirModel):
 
         return QtGui.QDirModel.setData(self, index, value, role)
 
-
+    #Gets the path from the checked files
     def get_savepath(self):
         """Allow user to set name and directory of JSON to be created."""
         savepath = str(QFileDialog.getSaveFileName(anchor_win, 'Save As'))
@@ -105,7 +104,7 @@ class CheckableDirModel(QtGui.QDirModel):
             savepath += '.json'
         return savepath
 
-
+    #Pops a message up after the JSON creation process is complete
     def end_message(self, text):
         """Provide user-friendly information about whether JSON creation was successful."""
         msg = QMessageBox()
@@ -137,7 +136,7 @@ class CheckableDirModel(QtGui.QDirModel):
 
         return dir_dict
 
-
+    #Make the JSON file from the directory structure and the savepath retrieved from the previous function
     def makeJSON(self):
         """Add information from get_directory_structure to a JSON."""
 	d = self.get_directory_structure()
@@ -153,6 +152,7 @@ class CheckableDirModel(QtGui.QDirModel):
         # Make all windows disappear after end message window is closed
         QtCore.QCoreApplication.instance().quit()
 
+#Window creation for mapping a destination for the  files
 class DestinationWindow(QWidget):
     # create our window
     # app = QApplication(sys.argv)
@@ -181,32 +181,26 @@ class DestinationWindow(QWidget):
         button2 = QPushButton('Browse', self)
         button2.move(500,105)
 
+        #Connect the buttons when clicked to the on_click function
         button1.clicked.connect(self.on_click)
         button2.clicked.connect(self.on_click)
 
-        #OKbutton.accepted.connect(model.makeJSON)
 
-        # self.show()
-
-        # # Show the window and run the app
-        # w.show()
-        # app.exec_()
-
+    #Function brings up the directory for destination in the editable text box
     def on_click(self):
         folder1 = QFileDialog.getExistingDirectory(QWidget(), 'Open Folder', '/')
         textbox1.setText(folder1)
 
 
-
+#Opens all the windows in the GUI
 if __name__ == '__main__':
 
+    #Initializes the GUI window
     app = QtGui.QApplication(sys.argv)
 
     anchor_win = QMainWindow()
 
-    # widget = win.show()
-
-    # Allow user to choose directory to populate checkable directory model
+        # Allow user to choose directory to populate checkable directory model
     example_path = str(QFileDialog.getExistingDirectory(anchor_win, 'Select Example Directory'))
 
     # Create and display custom SelectionWindow so user can select files to delete
