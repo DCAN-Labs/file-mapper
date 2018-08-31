@@ -63,12 +63,14 @@ def get_parser():
 
     return parser
 
-
+#big function that parses the entire JSON file
 def parse_data(data, verbose=False, testdebug=False):
     non_specials_list = []
+    #Checks for source and destination arguments in the JSON
     for element in data.keys():
         if element not in ['SOURCE', 'DESTINATION']:
             non_specials_list.append(element)
+        #If sourcepath exists the append it to the destination value and overwrite
     for key in non_specials_list:
         if args.sourcepath != None:
             if verbose:
@@ -82,6 +84,7 @@ def parse_data(data, verbose=False, testdebug=False):
             if verbose:
                 print("Source already exists in json data")
             source = os.path.join(data['SOURCE'],key)
+        #If the destination path arguement exists then append to the key and overwrites the preexisting argument
         if args.destpath != None:
             if verbose:
                 print("A destination path argument exists")
@@ -90,11 +93,13 @@ def parse_data(data, verbose=False, testdebug=False):
                 if verbose:
                     print('Optional DESTINATION argument: '+ args.destpath[0] +
                     ' overrules destination: ' + data['DESTINATION'].encode('ascii', 'ignore'))
+        #If the destination arguement exists then append it to the key value
         elif "DESTINATION" in data:
             if verbose:
                 print("Destination already exists in json data")
             destination = os.path.join(data['DESTINATION'], data[key])
         else:
+            #If neither exists then use preexisting values
             if verbose:
                 print("DESTINATION not provided, using prexisting values in JSON")
             destination = data[key]
@@ -121,31 +126,31 @@ def parse_data(data, verbose=False, testdebug=False):
                 if verbose:
                     print("Path has been made: " + dirname.encode('ascii', 'ignore'))
                 do_action(source, destination, args.action, testdebug = args.testdebug)
-        #prints out an missing key message for every key that doesnt
-        #exist in the json file
-        #ADD ELSE STATEMENT TO EXCEPT DIRECTORY ERRORS FOR SOURCE
-#The console will produce an error message if the key
-#in the JSON is improper
 
 
 
 
+#Decides what to do based on the action chosen by the user
 def do_action(src, dest, action, overwrite = False, testdebug = False, relsym = False):
     if overwrite:
         overwrite_string = 'overwrite '
     else:
         overwrite_string = ''
+        #If testdebug mode is present then a string will be constructed based on the arguments provided by the user
         if testdebug:
             print(overwrite_string + action + ': ' + src + ' -> ' + dest.encode('ascii', 'ignore'))
         else:
+            #copies the file from one directory to another
             if action == "copy":
                 if overwrite:
                     os.remove(dest)
                 shutil.copy(src, dest)
+            #moves the file from one directory to another
             elif action == "move":
                 if overwrite:
                     os.remove(dest)
                 shutil.move(src, dest)
+            #symlinks the file from one directory to another
             elif action == "symlink":
                 if overwrite:
                     os.unlink(dest)
