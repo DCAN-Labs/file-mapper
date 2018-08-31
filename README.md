@@ -1,6 +1,9 @@
 # File Mapper
 > An easy way to copy/move/symlink files from one directory to the other!
 
+### Intended Purpose
+This program is designed to help users to copy, move, symlink files from one directory to another using a JSON file. The key values being the source of the files and the value to the keys being the desired destination. This program has been designed to move important files from a large dataset and would be applicable in several of the BIDS datasets. The file_mapper GUI makes the mapping process easier by allowing users to check off what files/directories they want mapped and browse the file system to pick a directory for the destination.  
+
 ### Installation
 * Make sure python 3 is installed.
 * Clone file_mapper repo
