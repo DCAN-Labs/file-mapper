@@ -1,9 +1,9 @@
-#! /usr/bin/python3
-
-#GUI Which helps the user to select files to be mapped and creates a JSON file
-
-#Vasu Raguram
-#Version 1.0.0
+#! /usr/bin/env python3
+# 
+# GUI Which helps the user to select files to be mapped and creates a JSON file
+# 
+# Original Author: Vasu Raguram
+# 
 
 #Import the necesarry libraries for the GUI to run.
 import sys

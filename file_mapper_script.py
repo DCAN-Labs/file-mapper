@@ -12,7 +12,6 @@ import pprint
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
 VERSION = '1.1.0'
-LAST_MOD = '7-3-18'
 
 program_desc = """%(prog)s v%(ver)s:
 Script that manuipulates JSON files to create new directories with three
@@ -155,6 +154,12 @@ def do_action(src, dest, action, overwrite = False, testdebug = False, relsym = 
                 if overwrite:
                     os.unlink(dest)
                 os.symlink(src, dest)
+            #moves the file from one directory to another AND symlinks it back to its source
+            elif action == "move+symlink":
+                if overwrite:
+                    os.remove(dest)
+                shutil.move(src, dest)
+                os.symlink(dest, src)
             else:
                 sys.exit()
 

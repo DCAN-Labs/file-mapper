@@ -1,8 +1,0 @@
-{
-
-    "SOURCE":"/mnt/max/shared/projects/file_mapper_2.0/important_files",
-    "DESTINATION":"/mnt/max/shared/projects/file_mapper_2.0",
-    "file1.txt":"important_files2/filenewname.txt",
-    "file2.txt":"important_files3/totallydifferentfile.txt",
-    "file3.txt":"important_files4/totallydifferentfile.txt"
-}
