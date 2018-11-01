@@ -28,8 +28,8 @@ def get_parser():
                     help="""Absolute path to a JSON.""")
     #gives the three choices as an argument that the user can pass through
     #to manipulate the path of the json file
-    parser.add_argument('-a', '--action', dest='action', required=False,
-                        choices = ['copy', 'move', 'symlink'],  default='copy',
+    parser.add_argument('-a', '--action', dest='action', required=False, default='copy',
+                        choices = ['copy', 'move', 'symlink', 'move+symlink'],
                         help="""The three different actions of the script which
                         copies moves or symlinks, with a default of copy.""")
     parser.add_argument('-o', '--overwrite', dest='overwrite', required=False,
