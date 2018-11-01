@@ -11,7 +11,7 @@ import pprint
 
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
-VERSION = '1.1.0'
+VERSION = '1.1.1'
 
 program_desc = """%(prog)s v%(ver)s:
 Script that manuipulates JSON files to create new directories with three
@@ -23,42 +23,50 @@ def get_parser():
     #sets a variable equal to the argparse function which lets a user input
     #choices
     parser = argparse.ArgumentParser(description=program_desc, prog=PROG)
+
     #gives the absolute path to the json file
     parser.add_argument('jsonpath', nargs=1,
                     help="""Absolute path to a JSON.""")
-    #gives the three choices as an argument that the user can pass through
+
+    #gives the choices as an argument that the user can pass through
     #to manipulate the path of the json file
     parser.add_argument('-a', '--action', dest='action', required=False, default='copy',
                         choices = ['copy', 'move', 'symlink', 'move+symlink'],
-                        help="""The three different actions of the script which
-                        copies moves or symlinks, with a default of copy.""")
+                        help="""The different actions of the script which
+                        act on the source and destination, with a default of copy.""")
+
     parser.add_argument('-o', '--overwrite', dest='overwrite', required=False,
                         default=False, action = 'store_true',
                         help="""This allows new directories to be created
                         regardless of whether or not they already exist.""")
+
     parser.add_argument('-s', '--skip-errors', dest='skip_errors',
                         required=False, default=False, action= 'store_true',
                         help="""This skips over the errors in a JSON file so
                         that the other keys/values can be properly read.""")
+
     parser.add_argument('-sp', '--sourcepath', nargs=1, default=None,
                         required=False, help="""Provides the absolute path to
                         the source of the file being copied/moved/symlinked.""")
+
     parser.add_argument('-dp', '--destpath', nargs=1, default=None,
                         required=False, help="""Provides the absolute path to
                         the destination of the file being
                         copied/moved/symlinked""")
+
     parser.add_argument('-td', '--testdebug', dest='testdebug', required=False,
                         default=False, action='store_true', help="""Allows user
                         to see what happens when a certain mode is called""")
+
     parser.add_argument('-vb', '--verbose', dest='verbose', required=False,
                         default=False, action='store_true', help="""Shows all of
                         the print messages when verbose is called""")
+
     parser.add_argument('-relsym', '--relative-symlink', dest='relative_symlink',
                         required=False, default=False, action='store_true',
                         help="""Allows user to chose whether or not the symlink
                         being created is a relative path so that root
                         directories can be moved without the link breaking.""")
-
 
     return parser
 
