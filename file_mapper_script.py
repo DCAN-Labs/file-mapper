@@ -11,7 +11,7 @@ import pprint
 
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
-VERSION = '1.1.1'
+VERSION = '1.2.0'
 
 program_desc = """%(prog)s v%(ver)s:
 Script that manuipulates JSON files to create new directories with three
