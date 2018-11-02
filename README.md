@@ -1,4 +1,5 @@
 # File Mapper
+
 > An easy way to copy/move/symlink files from one directory to the other!
 
 ### Intended Purpose
@@ -7,7 +8,7 @@ This program is designed to help users to copy, move, symlink files from one dir
 
 ### Installation
 
-* Make sure python 3 is installed.
+* Use python 3.7
 * Clone file_mapper repo
 
 ### Usage of GUI

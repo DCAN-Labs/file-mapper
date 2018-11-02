@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /home/exacloud/lustre1/fnl_lab/code/external/utilities/miniconda3.7/bin/python
 # USAGE:
 #   ./Mover.py <JSON-file>
 
@@ -86,7 +86,7 @@ def parse_data(data, verbose=False, testdebug=False):
             if 'SOURCE' in data:
                 if verbose:
                     print('Optional SOURCE argument: '+ args.sourcepath[0] +
-                    ' overrules source: ' + data['SOURCE'].encode('ascii', 'ignore'))
+                    ' overrules source: ' + str(data['SOURCE']))
         elif 'SOURCE' in data:
             if verbose:
                 print("Source already exists in json data")
@@ -99,7 +99,7 @@ def parse_data(data, verbose=False, testdebug=False):
             if 'DESTINATION' in data:
                 if verbose:
                     print('Optional DESTINATION argument: '+ args.destpath[0] +
-                    ' overrules destination: ' + data['DESTINATION'].encode('ascii', 'ignore'))
+                    ' overrules destination: ' + str(data['DESTINATION']))
         #If the destination arguement exists then append it to the key value
         elif "DESTINATION" in data:
             if verbose:
@@ -117,35 +117,42 @@ def parse_data(data, verbose=False, testdebug=False):
             if os.path.isfile(destination):
                 if not args.overwrite:
                     if verbose or testdebug:
-                        print("Destination file already exists: " + destination.encode('ascii', 'ignore'))
+                        print("Destination file already exists: " + str(destination))
                 elif args.overwrite:
                     do_action(source, destination, args.action,
-                    overwrite=args.overwrite, testdebug=args.testdebug)
+                    overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
                     if verbose:
-                        print("File has been overwritten".encode('ascii', 'ignore'))
+                        print("File has been overwritten")
                 elif os.path.exists(dirname):
                     if verbose:
-                        print("Path already exists: " + dirname.encode('ascii', 'ignore'))
+                        print("Path already exists: " + str(dirname))
             elif os.path.isdir(os.path.dirname(destination)):
-                do_action(source, destination, args.action, testdebug = args.testdebug)
+                do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
             else:
                 os.makedirs( dirname )
                 if verbose:
-                    print("Path has been made: " + dirname.encode('ascii', 'ignore'))
-                do_action(source, destination, args.action, testdebug = args.testdebug)
+                    print("Path has been made: " + str(dirname))
+                do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
 
 
 
 
 #Decides what to do based on the action chosen by the user
 def do_action(src, dest, action, overwrite = False, testdebug = False, relsym = False):
+    if relsym:
+        common = os.path.commonpath([os.path.abspath(p) for p in [src,dest]])
+        src_from_common = os.path.relpath(src,common)
+        dest_from_common = os.path.relpath(dest,common)
+        rel_src_from_dest = os.sep.join(['..' for _ in dest_from_common.split(os.sep)[:-1]] + [src_from_common])
+        rel_dest_from_src = os.sep.join(['..' for _ in src_from_common.split(os.sep)[:-1]] + [dest_from_common])
+        
     if overwrite:
         overwrite_string = 'overwrite '
     else:
         overwrite_string = ''
         #If testdebug mode is present then a string will be constructed based on the arguments provided by the user
         if testdebug:
-            print(overwrite_string + action + ': ' + src + ' -> ' + dest.encode('ascii', 'ignore'))
+            print(overwrite_string + action + ': ' + src + ' -> ' + str(dest))
         else:
             #copies the file from one directory to another
             if action == "copy":
@@ -161,13 +168,19 @@ def do_action(src, dest, action, overwrite = False, testdebug = False, relsym = 
             elif action == "symlink":
                 if overwrite:
                     os.unlink(dest)
-                os.symlink(src, dest)
+                if relsym:
+                    os.symlink(rel_src_from_dest, dest)
+                else:
+                    os.symlink(src, dest)
             #moves the file from one directory to another AND symlinks it back to its source
             elif action == "move+symlink":
                 if overwrite:
                     os.remove(dest)
                 shutil.move(src, dest)
-                os.symlink(dest, src)
+                if relsym:
+                    os.symlink(rel_dest_from_src, src)
+                else:
+                    os.symlink(dest, src)
             else:
                 sys.exit()
 
