@@ -1,6 +1,9 @@
-#! /home/exacloud/lustre1/fnl_lab/code/external/utilities/miniconda3.7/bin/python
-# USAGE:
-#   ./Mover.py <JSON-file>
+#! /usr/bin/env python
+#
+# Requires Python 3
+# BASIC USAGE:
+#   ./file_mapper_script.py <JSON-file>
+#
 
 #import the different python libraries
 import os, sys
@@ -11,7 +14,7 @@ import pprint
 
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
-VERSION = '1.2.0'
+VERSION = '1.3.0'
 
 program_desc = """%(prog)s v%(ver)s:
 Script that manuipulates JSON files to create new directories with three
@@ -54,6 +57,14 @@ def get_parser():
                         the destination of the file being
                         copied/moved/symlinked""")
 
+    parser.add_argument('-t', '--template', nargs=1, default=None,
+                        required=False, help="""A no-spaces-allowed, comma-separated
+                        list of template fill-ins to replace fields in your JSON of
+                        the format: 'TEMPLATE1=REPLACEMENT1,TEMPLATE2=REPLACEMENT2,...'.
+                        For example let's say you want to replace a {SUBJECT} and
+                        {SESSION} template variable you would use: 
+                        -t 'SUBJECT=sub-01,SESSION=ses-baseline'""")
+
     parser.add_argument('-td', '--testdebug', dest='testdebug', required=False,
                         default=False, action='store_true', help="""Allows user
                         to see what happens when a certain mode is called""")
@@ -77,11 +88,15 @@ def parse_data(data, verbose=False, testdebug=False):
     for element in data.keys():
         if element not in ['SOURCE', 'DESTINATION']:
             non_specials_list.append(element)
-        #If sourcepath exists the append it to the destination value and overwrite
+
+    if args.template != None:
+        template_dict = parse_template(args.template[0])
+
     for key in non_specials_list:
+        #If sourcepath exists the append it to the destination value and overwrite
         if args.sourcepath != None:
             if verbose:
-                print("A sourcepath arguement exists")
+                print("A sourcepath argument exists")
             source = os.path.join(args.sourcepath[0], key)
             if 'SOURCE' in data:
                 if verbose:
@@ -91,7 +106,7 @@ def parse_data(data, verbose=False, testdebug=False):
             if verbose:
                 print("Source already exists in json data")
             source = os.path.join(data['SOURCE'],key)
-        #If the destination path arguement exists then append to the key and overwrites the preexisting argument
+        #If the destination path argument exists then append to the key and overwrites the pre-existing argument
         if args.destpath != None:
             if verbose:
                 print("A destination path argument exists")
@@ -100,16 +115,26 @@ def parse_data(data, verbose=False, testdebug=False):
                 if verbose:
                     print('Optional DESTINATION argument: '+ args.destpath[0] +
                     ' overrules destination: ' + str(data['DESTINATION']))
-        #If the destination arguement exists then append it to the key value
+        #If the destination argument exists then append it to the key's value
         elif "DESTINATION" in data:
             if verbose:
                 print("Destination already exists in json data")
             destination = os.path.join(data['DESTINATION'], data[key])
         else:
-            #If neither exists then use preexisting values
+            #If neither exists then use pre-existing values
             if verbose:
-                print("DESTINATION not provided, using prexisting values in JSON")
+                print("DESTINATION not provided, using pre-existing values in JSON")
             destination = data[key]
+
+        #Replace any template values in the case of an input template argument
+        if args.template != None:
+            if '{' in source and '}' in source:
+                for lookup in template_dict:
+                    source = source.replace('{' + lookup + '}', template_dict[lookup])
+            if '{' in destination and '}' in destination:
+                for lookup in template_dict:
+                    destination = destination.replace('{' + lookup + '}', template_dict[lookup])
+        
         #check if the path in the json data actually exists
         if os.path.exists(source) and os.path.isfile(source):
             dirname = os.path.dirname(destination)
@@ -138,7 +163,7 @@ def parse_data(data, verbose=False, testdebug=False):
 
 
 #Decides what to do based on the action chosen by the user
-def do_action(src, dest, action, overwrite = False, testdebug = False, relsym = False):
+def do_action(src, dest, action, overwrite=False, testdebug=False, relsym=False):
     if relsym:
         common = os.path.commonpath([os.path.abspath(p) for p in [src,dest]])
         src_from_common = os.path.relpath(src,common)
@@ -206,6 +231,24 @@ def json_validator(filename, skip_errors=False):
     return data
 
 
+# check and parse the template input argument
+def parse_template(template_str, testdebug=False, verbose=False):
+    template_dict = {}
+    comma_count = len([character for character in template_str if character == ','])
+    equal_count = len([character for character in template_str if character == '='])
+
+    if equal_count == (comma_count + 1):
+        pairs = template_str.split(',')
+        for pair in pairs:
+            key,value = pair.split('=')
+            template_dict[key] = value
+    else:
+        print("There is not an even split of commas and equal signs within this template input: " + template_str)
+        print("The --template argument takes its argument in the format: 'A=B,C=D,E=F'" + template_str)
+        print("Exiting.")
+        sys.exit()
+
+    return template_dict
 
 #defines variables to hold the argparse information so that
 #they can be called later in the for loop
