@@ -25,7 +25,7 @@ This program is designed to help users copy, move, or symlink files from one dir
     ```
 
   * The absolute path to the JSON file needs to be provided as a positional argument so the program can locate the file to process.
-  * The -a (--action) option allows the user to choose between moving, copying, or symlinking.  
+  * The -a (--action) option allows the user to choose between moving, copying, symlinking, or using the s3cmd to map from an s3 bucket ("S3cmd").  
       - The default is to copy
   * If the path has already been made, and an overwrite is needed, add the -o (--overwrite) flag.
   * If the overwrite flag is not provided and the file already exists then the console wil display: `Destination file already exists: [absolute path to the file]`  
