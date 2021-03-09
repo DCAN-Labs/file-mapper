@@ -206,6 +206,11 @@ def do_action(src, dest, action, overwrite=False, testdebug=False, relsym=False)
                     os.symlink(rel_dest_from_src, src)
                 else:
                     os.symlink(dest, src)
+            elif action=="s3cmd":
+                if overwrite:
+                    os.remove(dest)
+                cmd="s3cmd sync "+src+" "+dest
+                os.system(cmd)
             else:
                 sys.exit()
 
