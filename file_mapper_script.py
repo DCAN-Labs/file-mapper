@@ -11,6 +11,7 @@ import json
 import argparse
 import shutil
 import pprint
+from glob import glob
 
 #non built-in libraries
 import boto3
@@ -32,11 +33,17 @@ def get_parser():
     parser = argparse.ArgumentParser(description=program_desc, prog=PROG)
 
     #gives the absolute path to the json file
-    parser.add_argument('jsonpath', nargs=1,
+    parser.add_argument('jsonpath', nargs=1,required=True,
                     help="""Absolute path to a JSON.""")
+    #allows the user to choose whether they want to run at an invidual subject ("participant") or dataset ("group") level
+    parser.add_argument('analysis_level', help='Level of the analysis that will be performed. '
+                    'Multiple participant level analyses can be run independently '
+                    '(in parallel) using the same output_dir.',required=True,
+                    choices=['participant','group'])
 
     #gives the choices as an argument that the user can pass through
     #to manipulate the path of the json file
+
     parser.add_argument('-a', '--action', dest='action', required=False, default='copy',
                         choices = ['copy', 'move', 'symlink', 'move+symlink'],
                         help="""The different actions of the script which
@@ -65,14 +72,18 @@ def get_parser():
                         required=False, help="""Provides the absolute path to
                         the destination of the file being
                         copied/moved/symlinked""")
-
+    parser.add_argument('--participant_label', help='The label(s) of the participant(s) that should be analyzed. The label '
+                   'corresponds to sub-<participant_label> from the BIDS spec '
+                   '(so it does not include "sub-"). If this parameter is not '
+                   'provided all subjects should be analyzed.')
+    parser.add_argument('--session_label', help='The label(s) of the session(s) that should be analyzed. The label '
+                   'corresponds to ses-<session_label> from the BIDS spec '
+                   '(so it does not include "ses-"). If this parameter is not '
+                   'provided all subjects should be analyzed.')
     parser.add_argument('-t', '--template', nargs=1, default=None,
                         required=False, help="""A no-spaces-allowed, comma-separated
                         list of template fill-ins to replace fields in your JSON of
-                        the format: 'TEMPLATE1=REPLACEMENT1,TEMPLATE2=REPLACEMENT2,...'.
-                        For example let's say you want to replace a {SUBJECT} and
-                        {SESSION} template variable you would use: 
-                        -t 'SUBJECT=sub-01,SESSION=ses-baseline'""")
+                        the format: 'TEMPLATE1=REPLACEMENT1,TEMPLATE2=REPLACEMENT2,...'.""")
 
     parser.add_argument('-td', '--testdebug', dest='testdebug', required=False,
                         default=False, action='store_true', help="""Allows user
@@ -185,39 +196,73 @@ def parse_data(data, verbose=False, testdebug=False):
             destination = data[key]
 
         #Replace any template values in the case of an input template argument
-        if args.template != None:
-            if '{' in source and '}' in source:
-                for lookup in template_dict:
-                    source = source.replace('{' + lookup + '}', template_dict[lookup])
-            if '{' in destination and '}' in destination:
-                for lookup in template_dict:
-                    destination = destination.replace('{' + lookup + '}', template_dict[lookup])
-        
-        #check if the path in the json data actually exists
-        if os.path.exists(source) and os.path.isfile(source):
-            dirname = os.path.dirname(destination)
-            # make a directory based on the key in the json file
-            if os.path.isfile(destination):
-                if not args.overwrite:
-                    if verbose or testdebug:
-                        print("Destination file already exists: " + str(destination))
-                elif args.overwrite:
-                    do_action(source, destination, args.action,
-                    overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
-                    if verbose:
-                        print("File has been overwritten")
-                elif os.path.exists(dirname):
-                    if verbose:
-                        print("Path already exists: " + str(dirname))
-            elif os.path.isdir(os.path.dirname(destination)):
-                do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
+        if '{' in source and '}' in source:
+            for lookup in template_dict:
+                source = source.replace('{' + lookup + '}', template_dict[lookup])
+        if '{' in destination and '}' in destination:
+            for lookup in template_dict:
+                destination = destination.replace('{' + lookup + '}', template_dict[lookup])
+        for subject_label in subjects_to_analyze:
+            destination = destination.replace('{SUBJECT}', subject_label)
+            # compile list of sessions labels based on subject
+            sessions_to_analyze = []
+            # only for a subset of sessions
+            if args.session_label:
+                subjects_to_analyze = args.session_label
+            # for all sessions
             else:
-                os.makedirs( dirname )
-                if verbose:
-                    print("Path has been made: " + str(dirname))
-                do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
-
-
+                session_dirs = glob(os.path.join(args.sourcepath, "sub-"+subject_label))
+                sessions_to_analyze = [session_dir.split("-")[-1] for session_dir in session_dirs]
+            if sessions_to_analyze:
+                for session_label in sessions_to_analyze:
+                    destination = destination.replace('{SESSION}', session_label)
+                    #check if the path in the json data actually exists
+                    if os.path.exists(source) and os.path.isfile(source):
+                        dirname = os.path.dirname(destination)
+                        # make a directory based on the key in the json file
+                        if os.path.isfile(destination):
+                            if not args.overwrite:
+                                if verbose or testdebug:
+                                    print("Destination file already exists: " + str(destination))
+                            elif args.overwrite:
+                                do_action(source, destination, args.action,
+                                overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
+                                if verbose:
+                                    print("File has been overwritten")
+                            elif os.path.exists(dirname):
+                                if verbose:
+                                    print("Path already exists: " + str(dirname))
+                        elif os.path.isdir(os.path.dirname(destination)):
+                            do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
+                        else:
+                            os.makedirs( dirname )
+                            if verbose:
+                                print("Path has been made: " + str(dirname))
+                            do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
+            else:
+                #check if the path in the json data actually exists
+                if os.path.exists(source) and os.path.isfile(source):
+                    dirname = os.path.dirname(destination)
+                    # make a directory based on the key in the json file
+                    if os.path.isfile(destination):
+                        if not args.overwrite:
+                            if verbose or testdebug:
+                                print("Destination file already exists: " + str(destination))
+                        elif args.overwrite:
+                            do_action(source, destination, args.action,
+                            overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
+                            if verbose:
+                                print("File has been overwritten")
+                        elif os.path.exists(dirname):
+                            if verbose:
+                                print("Path already exists: " + str(dirname))
+                    elif os.path.isdir(os.path.dirname(destination)):
+                        do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
+                    else:
+                        os.makedirs( dirname )
+                        if verbose:
+                            print("Path has been made: " + str(dirname))
+                        do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
 
 
 #Decides what to do based on the action chosen by the user
@@ -318,6 +363,20 @@ def parse_template(template_str, testdebug=False, verbose=False):
 parser = get_parser()
 args = parser.parse_args()
 
+if args.analysis_level == 'group' and args.participant_label or args.analysis_level == 'group' and args.session_label:
+    raise ValueError('When specifying "analysis_level=group", this will act on the entire dataset. Using "--participant_label" or "--session_label" is ill posed.')
+elif args.analysis_level == 'participant' and not args.participant_label:
+    raise ValueError('When specifying "analysis_level=participant", this will act on a list of participants. Participants can be specified using "--participant_label" and "--session_label".')
+
+# compile list of subject labels
+subjects_to_analyze = []
+# only for a subset of subjects
+if args.participant_label:
+    subjects_to_analyze = args.participant_label
+# for all subjects
+else:
+    subject_dirs = glob(os.path.join(args.sourcepath, "sub-*"))
+    subjects_to_analyze = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]
 
 ### START HERE ###
 json_file = args.jsonpath[0]
