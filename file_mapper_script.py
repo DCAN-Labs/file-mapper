@@ -11,7 +11,10 @@ import json
 import argparse
 import shutil
 import pprint
-from glob import glob
+
+#non built-in libraries
+import boto3
+
 
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
@@ -29,22 +32,21 @@ def get_parser():
     parser = argparse.ArgumentParser(description=program_desc, prog=PROG)
 
     #gives the absolute path to the json file
-    parser.add_argument('jsonpath', nargs=1,required=True,
+    parser.add_argument('jsonpath', nargs=1,
                     help="""Absolute path to a JSON.""")
-    #allows the user to choose whether they want to run at an invidual subject ("participant") or dataset ("group") level
-    parser.add_argument('analysis_level', help='Level of the analysis that will be performed. '
-                    'Multiple participant level analyses can be run independently '
-                    '(in parallel) using the same output_dir.',required=True,
-                    choices=['participant','group'])
 
     #gives the choices as an argument that the user can pass through
     #to manipulate the path of the json file
-
     parser.add_argument('-a', '--action', dest='action', required=False, default='copy',
                         choices = ['copy', 'move', 'symlink', 'move+symlink'],
                         help="""The different actions of the script which
                         act on the source and destination, with a default of copy.""")
-
+    parser.add_argument('--s3_access_key',required=False,type=str,
+                        help='Your S3 access key, if data is within S3. If using MSI, this can be found at: https://www.msi.umn.edu/content/s3-credentials')
+    parser.add_argument('--s3_hostname',required=False,default='https://s3.msi.umn.edu',type=str,
+                        help='URL for S3 storage hostname, if data is within S3 bucket. Defaults to s3.msi.umn.edu for MSIs tier 2 CEPH storage.')
+    parser.add_argument('--s3_secret_key',required=False,type=str,
+                        help='Your S3 secret key. If using MSI, this can be found at: https://www.msi.umn.edu/content/s3-credentials')    
     parser.add_argument('-o', '--overwrite', dest='overwrite', required=False,
                         default=False, action = 'store_true',
                         help="""This allows new directories to be created
@@ -63,18 +65,14 @@ def get_parser():
                         required=False, help="""Provides the absolute path to
                         the destination of the file being
                         copied/moved/symlinked""")
-    parser.add_argument('--participant_label', help='The label(s) of the participant(s) that should be analyzed. The label '
-                   'corresponds to sub-<participant_label> from the BIDS spec '
-                   '(so it does not include "sub-"). If this parameter is not '
-                   'provided all subjects should be analyzed.')
-    parser.add_argument('--session_label', help='The label(s) of the session(s) that should be analyzed. The label '
-                   'corresponds to ses-<session_label> from the BIDS spec '
-                   '(so it does not include "ses-"). If this parameter is not '
-                   'provided all subjects should be analyzed.')
+
     parser.add_argument('-t', '--template', nargs=1, default=None,
                         required=False, help="""A no-spaces-allowed, comma-separated
                         list of template fill-ins to replace fields in your JSON of
-                        the format: 'TEMPLATE1=REPLACEMENT1,TEMPLATE2=REPLACEMENT2,...'.""")
+                        the format: 'TEMPLATE1=REPLACEMENT1,TEMPLATE2=REPLACEMENT2,...'.
+                        For example let's say you want to replace a {SUBJECT} and
+                        {SESSION} template variable you would use: 
+                        -t 'SUBJECT=sub-01,SESSION=ses-baseline'""")
 
     parser.add_argument('-td', '--testdebug', dest='testdebug', required=False,
                         default=False, action='store_true', help="""Allows user
@@ -91,6 +89,55 @@ def get_parser():
                         directories can be moved without the link breaking.""")
 
     return parser
+
+# if pulling from s3 will retreive BIDS subjects from bucket
+def s3_get_bids_subjects(access_key,bucketName,host,prefix,secret_key):
+    client = s3_client(access_key=access_key,host=host,secret_key=secret_key)
+    paginator = client.get_paginator('list_objects_v2')
+    page_iterator = paginator.paginate(Bucket=bucketName,Delimiter='/',Prefix=prefix,EncodingType='url',ContinuationToken='',
+                                             FetchOwner=False,
+                                             StartAfter='')
+    get_data = client.list_objects_v2(Bucket=bucketName,Delimiter='/',EncodingType='url',
+                                            Prefix=prefix,
+                                             MaxKeys=1000,
+                                             ContinuationToken='',
+                                             FetchOwner=False,
+                                             StartAfter='')
+    bids_subjects = []
+    for page in page_iterator:
+        page_bids_subjects = ['sub-'+item['Prefix'].split('sub-')[1].strip('/') for item in page['CommonPrefixes'] if 'sub' in item['Prefix']]
+        bids_subjects.extend(page_bids_subjects)
+    return bids_subjects
+
+# if pull from s3 will retreive BIDS sessions from bucket
+def s3_get_bids_sessions(access_key,bucketName,host,prefix,secret_key):
+    client = s3_client(access_key=access_key,host=host,secret_key=secret_key)
+    get_data = client.list_objects_v2(Bucket=bucketName,Delimiter='/',EncodingType='url',
+                                          MaxKeys=1000,
+                                          Prefix=prefix,
+                                          ContinuationToken='',
+                                          FetchOwner=False,
+                                          StartAfter='')
+    bids_sessions = [item['Prefix'].split('/')[1] for item in get_data['CommonPrefixes'] if 'ses' in item['Prefix'].split('/')[1]]
+    return bids_sessions
+
+# download data from s3 bucket using S3
+def downloadDirectoryFroms3(bucketName,remoteDirectoryName,access_key,secret_key,host):
+    s3_resource = boto3.resource('s3',endpoint_url=host,
+                                 aws_access_key_id=access_key, 
+                                 aws_secret_access_key=secret_key)
+    bucket = s3_resource.Bucket(bucketName) 
+    try:
+        for object in bucket.objects.filter(Prefix = remoteDirectoryName):
+            if not os.path.exists(os.path.dirname(os.path.join(hcp_output_data,object.key))):
+                os.makedirs(os.path.dirname(os.path.join(hcp_output_data,object.key)))
+                bucket.download_file(object.key,os.path.join(hcp_output_data,object.key))
+            else:
+                remote_file_size = object.size
+                local_file_size = os.stat(os.path.join(hcp_output_data,object.key)).st_size
+                if not local_file_size == remote_file_size:
+                    bucket.download_file(object.key,os.path.join(hcp_output_data,object.key))
+
 
 #big function that parses the entire JSON file
 def parse_data(data, verbose=False, testdebug=False):
@@ -138,73 +185,39 @@ def parse_data(data, verbose=False, testdebug=False):
             destination = data[key]
 
         #Replace any template values in the case of an input template argument
-        if '{' in source and '}' in source:
-            for lookup in template_dict:
-                source = source.replace('{' + lookup + '}', template_dict[lookup])
-        if '{' in destination and '}' in destination:
-            for lookup in template_dict:
-                destination = destination.replace('{' + lookup + '}', template_dict[lookup])
-        for subject_label in subjects_to_analyze:
-            destination = destination.replace('{SUBJECT}', subject_label)
-            # compile list of sessions labels based on subject
-            sessions_to_analyze = []
-            # only for a subset of sessions
-            if args.session_label:
-                subjects_to_analyze = args.session_label
-            # for all sessions
+        if args.template != None:
+            if '{' in source and '}' in source:
+                for lookup in template_dict:
+                    source = source.replace('{' + lookup + '}', template_dict[lookup])
+            if '{' in destination and '}' in destination:
+                for lookup in template_dict:
+                    destination = destination.replace('{' + lookup + '}', template_dict[lookup])
+        
+        #check if the path in the json data actually exists
+        if os.path.exists(source) and os.path.isfile(source):
+            dirname = os.path.dirname(destination)
+            # make a directory based on the key in the json file
+            if os.path.isfile(destination):
+                if not args.overwrite:
+                    if verbose or testdebug:
+                        print("Destination file already exists: " + str(destination))
+                elif args.overwrite:
+                    do_action(source, destination, args.action,
+                    overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
+                    if verbose:
+                        print("File has been overwritten")
+                elif os.path.exists(dirname):
+                    if verbose:
+                        print("Path already exists: " + str(dirname))
+            elif os.path.isdir(os.path.dirname(destination)):
+                do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
             else:
-                session_dirs = glob(os.path.join(args.sourcepath, "sub-"+subject_label))
-                sessions_to_analyze = [session_dir.split("-")[-1] for session_dir in session_dirs]
-            if sessions_to_analyze:
-                for session_label in sessions_to_analyze:
-                    destination = destination.replace('{SESSION}', session_label)
-                    #check if the path in the json data actually exists
-                    if os.path.exists(source) and os.path.isfile(source):
-                        dirname = os.path.dirname(destination)
-                        # make a directory based on the key in the json file
-                        if os.path.isfile(destination):
-                            if not args.overwrite:
-                                if verbose or testdebug:
-                                    print("Destination file already exists: " + str(destination))
-                            elif args.overwrite:
-                                do_action(source, destination, args.action,
-                                overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
-                                if verbose:
-                                    print("File has been overwritten")
-                            elif os.path.exists(dirname):
-                                if verbose:
-                                    print("Path already exists: " + str(dirname))
-                        elif os.path.isdir(os.path.dirname(destination)):
-                            do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
-                        else:
-                            os.makedirs( dirname )
-                            if verbose:
-                                print("Path has been made: " + str(dirname))
-                            do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
-            else:
-                #check if the path in the json data actually exists
-                if os.path.exists(source) and os.path.isfile(source):
-                    dirname = os.path.dirname(destination)
-                    # make a directory based on the key in the json file
-                    if os.path.isfile(destination):
-                        if not args.overwrite:
-                            if verbose or testdebug:
-                                print("Destination file already exists: " + str(destination))
-                        elif args.overwrite:
-                            do_action(source, destination, args.action,
-                            overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
-                            if verbose:
-                                print("File has been overwritten")
-                        elif os.path.exists(dirname):
-                            if verbose:
-                                print("Path already exists: " + str(dirname))
-                    elif os.path.isdir(os.path.dirname(destination)):
-                        do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
-                    else:
-                        os.makedirs( dirname )
-                        if verbose:
-                            print("Path has been made: " + str(dirname))
-                        do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
+                os.makedirs( dirname )
+                if verbose:
+                    print("Path has been made: " + str(dirname))
+                do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
+
+
 
 
 #Decides what to do based on the action chosen by the user
@@ -305,20 +318,6 @@ def parse_template(template_str, testdebug=False, verbose=False):
 parser = get_parser()
 args = parser.parse_args()
 
-if args.analysis_level == 'group' and args.participant_label or args.analysis_level == 'group' and args.session_label:
-    raise ValueError('When specifying "analysis_level=group", this will act on the entire dataset. Using "--participant_label" or "--session_label" is ill posed.')
-elif args.analysis_level == 'participant' and not args.participant_label:
-    raise ValueError('When specifying "analysis_level=participant", this will act on a list of participants. Participants can be specified using "--participant_label" and "--session_label".')
-
-# compile list of subject labels
-subjects_to_analyze = []
-# only for a subset of subjects
-if args.participant_label:
-    subjects_to_analyze = args.participant_label
-# for all subjects
-else:
-    subject_dirs = glob(os.path.join(args.sourcepath, "sub-*"))
-    subjects_to_analyze = [subject_dir.split("-")[-1] for subject_dir in subject_dirs]
 
 ### START HERE ###
 json_file = args.jsonpath[0]
