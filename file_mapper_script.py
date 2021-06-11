@@ -12,6 +12,10 @@ import argparse
 import shutil
 import pprint
 
+#non built-in libraries
+import boto3
+
+
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
 VERSION = '1.3.0'
@@ -37,7 +41,12 @@ def get_parser():
                         choices = ['copy', 'move', 'symlink', 'move+symlink'],
                         help="""The different actions of the script which
                         act on the source and destination, with a default of copy.""")
-
+    parser.add_argument('--s3_access_key',required=False,type=str,
+                        help='Your S3 access key, if data is within S3. If using MSI, this can be found at: https://www.msi.umn.edu/content/s3-credentials')
+    parser.add_argument('--s3_hostname',required=False,default='https://s3.msi.umn.edu',type=str,
+                        help='URL for S3 storage hostname, if data is within S3 bucket. Defaults to s3.msi.umn.edu for MSIs tier 2 CEPH storage.')
+    parser.add_argument('--s3_secret_key',required=False,type=str,
+                        help='Your S3 secret key. If using MSI, this can be found at: https://www.msi.umn.edu/content/s3-credentials')    
     parser.add_argument('-o', '--overwrite', dest='overwrite', required=False,
                         default=False, action = 'store_true',
                         help="""This allows new directories to be created
@@ -80,6 +89,55 @@ def get_parser():
                         directories can be moved without the link breaking.""")
 
     return parser
+
+# if pulling from s3 will retreive BIDS subjects from bucket
+def s3_get_bids_subjects(access_key,bucketName,host,prefix,secret_key):
+    client = s3_client(access_key=access_key,host=host,secret_key=secret_key)
+    paginator = client.get_paginator('list_objects_v2')
+    page_iterator = paginator.paginate(Bucket=bucketName,Delimiter='/',Prefix=prefix,EncodingType='url',ContinuationToken='',
+                                             FetchOwner=False,
+                                             StartAfter='')
+    get_data = client.list_objects_v2(Bucket=bucketName,Delimiter='/',EncodingType='url',
+                                            Prefix=prefix,
+                                             MaxKeys=1000,
+                                             ContinuationToken='',
+                                             FetchOwner=False,
+                                             StartAfter='')
+    bids_subjects = []
+    for page in page_iterator:
+        page_bids_subjects = ['sub-'+item['Prefix'].split('sub-')[1].strip('/') for item in page['CommonPrefixes'] if 'sub' in item['Prefix']]
+        bids_subjects.extend(page_bids_subjects)
+    return bids_subjects
+
+# if pull from s3 will retreive BIDS sessions from bucket
+def s3_get_bids_sessions(access_key,bucketName,host,prefix,secret_key):
+    client = s3_client(access_key=access_key,host=host,secret_key=secret_key)
+    get_data = client.list_objects_v2(Bucket=bucketName,Delimiter='/',EncodingType='url',
+                                          MaxKeys=1000,
+                                          Prefix=prefix,
+                                          ContinuationToken='',
+                                          FetchOwner=False,
+                                          StartAfter='')
+    bids_sessions = [item['Prefix'].split('/')[1] for item in get_data['CommonPrefixes'] if 'ses' in item['Prefix'].split('/')[1]]
+    return bids_sessions
+
+# download data from s3 bucket using S3
+def downloadDirectoryFroms3(bucketName,remoteDirectoryName,access_key,secret_key,host):
+    s3_resource = boto3.resource('s3',endpoint_url=host,
+                                 aws_access_key_id=access_key, 
+                                 aws_secret_access_key=secret_key)
+    bucket = s3_resource.Bucket(bucketName) 
+    try:
+        for object in bucket.objects.filter(Prefix = remoteDirectoryName):
+            if not os.path.exists(os.path.dirname(os.path.join(hcp_output_data,object.key))):
+                os.makedirs(os.path.dirname(os.path.join(hcp_output_data,object.key)))
+                bucket.download_file(object.key,os.path.join(hcp_output_data,object.key))
+            else:
+                remote_file_size = object.size
+                local_file_size = os.stat(os.path.join(hcp_output_data,object.key)).st_size
+                if not local_file_size == remote_file_size:
+                    bucket.download_file(object.key,os.path.join(hcp_output_data,object.key))
+
 
 #big function that parses the entire JSON file
 def parse_data(data, verbose=False, testdebug=False):
