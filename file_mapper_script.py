@@ -17,10 +17,6 @@ from glob import glob
 import boto3
 
 
-#non built-in libraries
-import boto3
-
-
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
 VERSION = '1.3.0'
