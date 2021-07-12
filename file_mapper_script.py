@@ -49,7 +49,7 @@ def get_parser():
                         help="""The different actions of the script which
                         act on the source and destination, with a default of copy.""")
     parser.add_argument('--s3_access_key',required=False,type=str,
-                        help='Your S3 access key, if data is within S3. If using MSI, this can be found at: https://www.msi.umn.edu/content/s3-credentials')
+                        help='Your S3 access key, if data is within S3. If using MSI, this can be found at: https://www.msi.umn.edu/content/s3-credentials') # nargs = 2?
     parser.add_argument('--s3_hostname',required=False,default='https://s3.msi.umn.edu',type=str,
                         help='URL for S3 storage hostname, if data is within S3 bucket. Defaults to s3.msi.umn.edu for MSIs tier 2 CEPH storage.')
     parser.add_argument('--s3_secret_key',required=False,type=str,
