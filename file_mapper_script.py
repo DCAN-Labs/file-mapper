@@ -17,9 +17,9 @@ PROG = 'File Mapper'
 VERSION = '1.3.0'
 
 program_desc = """%(prog)s v%(ver)s:
-Script that manuipulates JSON files to create new directories with three
-options of copy move and symbolic link.
-#""" % {'prog': PROG, 'ver': VERSION}
+Script to make a new directory and map files from a source directory. Files
+can be copied or moved, or the script can make symbolic links.
+""" % {'prog': PROG, 'ver': VERSION}
 
 
 def get_parser():
@@ -29,55 +29,70 @@ def get_parser():
 
     #gives the absolute path to the json file
     parser.add_argument('jsonpath', nargs=1,
-                    help="""Absolute path to a JSON.""")
+                    help="""Absolute path to the required JSON.""")
 
     #gives the choices as an argument that the user can pass through
     #to manipulate the path of the json file
     parser.add_argument('-a', '--action', dest='action', required=False, default='copy',
                         choices = ['copy', 'move', 'symlink', 'move+symlink'],
-                        help="""The different actions of the script which
-                        act on the source and destination, with a default of copy.""")
+                        help="""Choose between moving, copying, or symlinking between
+                        the source and destination. Default: copy.""")
 
     parser.add_argument('-o', '--overwrite', dest='overwrite', required=False,
                         default=False, action = 'store_true',
-                        help="""This allows new directories to be created
-                        regardless of whether or not they already exist.""")
+                        help="""This allows new files to be created whether or not
+                        they already exist.
+                        If a path already exists, and this flag was not provided, the
+                        console will display a message that the path already exists
+                        and the file will not be copied.
+                        If a path already exists and this flag was used, the console
+                        will display a message that the file was overwritten.
+                        """)
 
     parser.add_argument('-s', '--skip-errors', dest='skip_errors',
                         required=False, default=False, action= 'store_true',
                         help="""This skips over the errors in a JSON file so
-                        that the other keys/values can be properly read.""")
+                        that the other keys/values can be properly read.
+                        """)
 
-    parser.add_argument('-sp', '--sourcepath', nargs=1, default=None,
-                        required=False, help="""Provides the absolute path to
-                        the source of the file being copied/moved/symlinked.""")
+    parser.add_argument('-sp', '--sourcepath', nargs=1, default=None, required=False,
+                        help="""Provides the absolute path to the source of the file
+                        being copied/moved/symlinked.
+                        """)
 
-    parser.add_argument('-dp', '--destpath', nargs=1, default=None,
-                        required=False, help="""Provides the absolute path to
-                        the destination of the file being
-                        copied/moved/symlinked""")
+    parser.add_argument('-dp', '--destpath', nargs=1, default=None, required=False,
+                        help="""Provides the absolute path to the destination of the
+                        file being copied/moved/symlinked.
+                        """)
 
-    parser.add_argument('-t', '--template', nargs=1, default=None,
-                        required=False, help="""A no-spaces-allowed, comma-separated
+    parser.add_argument('-t', '--template', nargs=1, default=None, required=False,
+                        help="""A no-spaces-allowed, comma-separated
                         list of template fill-ins to replace fields in your JSON of
                         the format: 'TEMPLATE1=REPLACEMENT1,TEMPLATE2=REPLACEMENT2,...'.
                         For example let's say you want to replace a {SUBJECT} and
-                        {SESSION} template variable you would use: 
-                        -t 'SUBJECT=sub-01,SESSION=ses-baseline'""")
+                        {SESSION} template variable you would use:
+                        -t 'SUBJECT=sub-01,SESSION=ses-baseline'
+                        """)
 
     parser.add_argument('-td', '--testdebug', dest='testdebug', required=False,
-                        default=False, action='store_true', help="""Allows user
-                        to see what happens when a certain mode is called""")
+                        default=False, action='store_true',
+                        help="""Display what the code would do, using the other
+                        options provided, without performing the actions.
+                        """)
 
     parser.add_argument('-vb', '--verbose', dest='verbose', required=False,
-                        default=False, action='store_true', help="""Shows all of
-                        the print messages when verbose is called""")
+                        default=False, action='store_true',
+                        help="""Without this option, the program will run without
+                        displaying any messages to the console, under the philosophy
+                        'Succeed silently, fail loudly.'
+                        """)
 
     parser.add_argument('-relsym', '--relative-symlink', dest='relative_symlink',
                         required=False, default=False, action='store_true',
                         help="""Allows user to chose whether or not the symlink
                         being created is a relative path so that root
-                        directories can be moved without the link breaking.""")
+                        directories can be moved without the link breaking.
+                        """)
 
     return parser
 
@@ -134,7 +149,7 @@ def parse_data(data, verbose=False, testdebug=False):
             if '{' in destination and '}' in destination:
                 for lookup in template_dict:
                     destination = destination.replace('{' + lookup + '}', template_dict[lookup])
-        
+
         #check if the path in the json data actually exists
         if os.path.exists(source) and os.path.isfile(source):
             dirname = os.path.dirname(destination)
@@ -170,7 +185,7 @@ def do_action(src, dest, action, overwrite=False, testdebug=False, relsym=False)
         dest_from_common = os.path.relpath(dest,common)
         rel_src_from_dest = os.sep.join(['..' for _ in dest_from_common.split(os.sep)[:-1]] + [src_from_common])
         rel_dest_from_src = os.sep.join(['..' for _ in src_from_common.split(os.sep)[:-1]] + [dest_from_common])
-        
+
     if overwrite:
         overwrite_string = 'overwrite '
     else:
