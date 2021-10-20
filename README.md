@@ -8,13 +8,13 @@ This program is designed to help users copy, move, or symlink files from one dir
 
 ## Installation
 
-* Use python 3.7
+* Use python 3.7 or greater
 * Clone file-mapper repo locally
 
 ## Usage of Script
 
 ```
-usage: File Mapper [-h] [-a {copy,move,symlink,move+symlink}] [-o] [-s]
+usage: File Mapper [-h] [-a {copy,move,symlink,move+symlink,s3cmd}] [-o] [-s]
                    [-sp SOURCEPATH] [-dp DESTPATH] [-t TEMPLATE] [-td] [-vb]
                    [-relsym]
                    jsonpath
@@ -28,9 +28,10 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -a {copy,move,symlink,move+symlink}, --action {copy,move,symlink,move+symlink}
+  -a {copy,move,symlink,move+symlink,s3cmd}, --action {copy,move,symlink,move+symlink,s3cmd}
                         Choose between moving, copying, or symlinking between
                         the source and destination. Default: copy.
+                        s3cmd allows for file-mapping from an s3 bucket.
   -o, --overwrite       This allows new files to be created whether or not
                         they already exist. If a path already exists, and this
                         flag was not provided, the console will display a
@@ -42,17 +43,19 @@ optional arguments:
                         other keys/values can be properly read.
   -sp SOURCEPATH, --sourcepath SOURCEPATH
                         Provides the absolute path to the source of the file
-                        being copied/moved/symlinked.
+                        being copied/moved/symlinked. Be sure to include the
+                        entire path up to where the path within the JSON 
+                        file begins.
   -dp DESTPATH, --destpath DESTPATH
                         Provides the absolute path to the destination of the
                         file being copied/moved/symlinked.
   -t TEMPLATE, --template TEMPLATE
                         A no-spaces-allowed, comma-separated list of template
-                        fill-ins to replace fields in your JSON of the format:
+                        fill-ins to replace any fields in your JSON of the format:
                         'TEMPLATE1=REPLACEMENT1,TEMPLATE2=REPLACEMENT2,...'.
                         For example let's say you want to replace a {SUBJECT}
                         and {SESSION} template variable you would use: -t
-                        'SUBJECT=sub-01,SESSION=ses-baseline'
+                        'SUBJECT=01,SESSION=baseline'
   -td, --testdebug      Display what the code would do, using the other
                         options provided, without performing the actions.
   -vb, --verbose        Without this option, the program will run without
@@ -96,8 +99,18 @@ DESTINATION not provided, using prexisting values in JSON
 
 ## Example 2: SOURCE and DESTINATION passed in on the command line with the TEMPLATE option
 
-File mapping in silent mode using the overwrite and skip errors flags as well as specifying the root source path and root destination path for mapped files.
+File mapping in silent mode using the overwrite and skip errors flags as well as specifying the root source path and root destination path for mapped files. Here we are using the -t flag to substitute NDARSOMETHING for SUBJECT, 122months for SESSION, and infant-abcd-bids-pipeline for PIPELINE.
 
 ```
-user@server:~/file-mapper$ ./file_mapper_script.py ./example2.json -a copy -o -s -sp /folder/containing/source/files/ -dp /folder/to/house/destination/files/ -t SUBJECT=NDARSOMETHING,SESSION=122months,PIPELINE=infant-abcd-bids-pipeline"
+user@server:~/file-mapper$ ./file_mapper_script.py ./example2.json -a copy -o -s -sp /home/user/data/study/sub-NDARSOMETHING/ses-122mo/files/ -dp /folder/to/house/destination/files/ -t SUBJECT=NDARSOMETHING,SESSION=122months,PIPELINE=infant-abcd-bids-pipeline"
 ```
+
+An example of that replacement being applied:
+```
+"DCANBOLDProc_v4.0.0/analyses_v2/motion/task-rest_power_2014_FD_only.mat": "derivatives/{PIPELINE}/sub-{SUBJECT}/ses-{SESSION}/func/sub-{SUBJECT}_ses-{SESSION}_task-rest_desc-filtered_motion_mask.mat"
+```
+```
+"DCANBOLDProc_v4.0.0/analyses_v2/motion/task-rest_power_2014_FD_only.mat": "derivatives/infant-abcd-bids-pipeline/sub-NDARSOMETHING/ses-122months/func/sub-NDARSOMETHING_ses-122month_task-rest_desc-filtered_motion_mask.mat"
+```
+
+## TODO ADVANCED USAGE EXAMPLE FOR MULTIPLE SUBJECTS
