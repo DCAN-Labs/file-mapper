@@ -113,4 +113,14 @@ An example of that replacement being applied:
 "DCANBOLDProc_v4.0.0/analyses_v2/motion/task-rest_power_2014_FD_only.mat": "derivatives/infant-abcd-bids-pipeline/sub-NDARSOMETHING/ses-122months/func/sub-NDARSOMETHING_ses-122month_task-rest_desc-filtered_motion_mask.mat"
 ```
 
-## TODO ADVANCED USAGE EXAMPLE FOR MULTIPLE SUBJECTS
+## EXAMPLE FOR MULTIPLE SUBJECTS
+
+This example uses a for-loop to run the file-mapper on the 12mo sessions of all subjects in the study folder `/home/user/data/study/`. 
+
+As used below, `basename ${n}` will resolve to the subject directory name, e.g. `sub-NDARSOMETHING`, in which case `basename ${n} | tail -c +5` resolves to simply `NDARSOMETHING`. 
+
+(`tail -c +5` extracts the "tail" of the string beginning from the 5th character, effectively discarding the `sub-`).
+
+```
+user@server:~/file-mapper$ for n in /home/user/data/study/sub-*; do ./file_mapper_script.py ./example2.json -a copy -o -s -sp /home/user/data/study/`basename ${n}`/ses-12mo/files/ -dp /folder/to/house/destination/files/ -t SUBJECT=`basename ${n} | tail -c +5`,SESSION=12months,PIPELINE=infant-abcd-bids-pipeline"; done
+```
