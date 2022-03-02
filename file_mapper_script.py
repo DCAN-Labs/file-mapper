@@ -6,11 +6,11 @@
 #
 
 #import the different python libraries
-import os, sys
-import json
 import argparse
+import json
+import os
 import shutil
-import pprint
+import sys
 
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
@@ -97,9 +97,24 @@ def get_parser():
     return parser
 
 #big function that parses the entire JSON file
-def parse_data(data, verbose=False, testdebug=False):
-    non_specials_list = []
+def parse_data(contents, verbose=False, testdebug=False):
+    data = {}
+    for source, destination in contents.items():
+        if '{#}' in source and '{#}' in destination:
+            for i in range(100):
+                num_zeropad_1 = '{:01d}'.format(i)
+                num_zeropad_2 = '{:02d}'.format(i)
+                num_zeropad_3 = '{:03d}'.format(i)
+                zeropads = list(set([num_zeropad_1, num_zeropad_2, num_zeropad_3]))
+                for zeropad in zeropads:
+                    source_temp = source.replace('{#}', zeropad)
+                    destination_temp = destination.replace('{#}', zeropad)
+                    data[source_temp] = destination_temp
+        else:
+            data[source] = destination
+
     #Checks for source and destination arguments in the JSON
+    non_specials_list = []
     for element in data.keys():
         if element not in ['SOURCE', 'DESTINATION']:
             non_specials_list.append(element)
