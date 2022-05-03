@@ -14,7 +14,7 @@ import sys
 
 #gives a description over the purpose of the program
 PROG = 'File Mapper'
-VERSION = '1.3.0'
+VERSION = '1.4.0'
 
 program_desc = """%(prog)s v%(ver)s:
 Script to make a new directory and map files from a source directory. Files
@@ -94,7 +94,35 @@ def get_parser():
                         directories can be moved without the link breaking.
                         """)
 
+    parser.add_argument('-sc', '--sidecars', dest='sidecars',
+                        required=False, default=False, action='store_true',
+                        help="""Also copy/move/symlink the corresponding
+                        json sidecars""")
+
     return parser
+
+
+def map_sidecars(source, destination):
+    ''' Return name of json sidecars to be copied/symlinked etc
+
+    Args:
+        source (str): full path to source file
+        destination (str): full path to destination
+    Returns:
+        json_src (str): full path to source json file
+        json_dest (str): fill path to destination json file
+    '''
+
+    replace = [".nii.gz", ".nii"]
+
+    for repl in replace:
+        if repl in source:
+            json_src = source.replace(repl, ".json")
+            json_dest = destination.replace(repl, ".json")
+            break
+
+    return json_src, json_dest
+
 
 #big function that parses the entire JSON file
 def parse_data(contents, verbose=False, testdebug=False):
@@ -178,6 +206,11 @@ def parse_data(contents, verbose=False, testdebug=False):
                 elif args.overwrite:
                     do_action(source, destination, args.action,
                     overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
+                    if args.sidecars:
+                        json_src, json_dest = map_sidecars(source, destination)
+                        do_action(json_src, json_dest, args.action,
+                                  testdebug=args.testdebug,
+                                  relsym=args.relative_symlink)
                     if verbose:
                         print("File has been overwritten")
                 elif os.path.exists(dirname):
@@ -185,11 +218,24 @@ def parse_data(contents, verbose=False, testdebug=False):
                         print("Path already exists: " + str(dirname))
             elif os.path.isdir(os.path.dirname(destination)):
                 do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
+                if args.sidecars:
+                    json_src, json_dest = map_sidecars(source, destination)
+                    do_action(json_src, json_dest, args.action,
+                              testdebug=args.testdebug,
+                              relsym=args.relative_symlink)
             else:
                 os.makedirs( dirname )
                 if verbose:
                     print("Path has been made: " + str(dirname))
                 do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
+                if args.sidecars:
+                    json_src, json_dest = map_sidecars(source, destination)
+                    do_action(json_src, json_dest, args.action,
+                              testdebug=args.testdebug,
+                              relsym=args.relative_symlink)
+        elif "run-" not in source:
+            print("Could not create map. Check source path")
+            print(f"Source path: {source}")
 
 
 
