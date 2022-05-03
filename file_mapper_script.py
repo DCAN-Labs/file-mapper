@@ -116,7 +116,7 @@ def map_sidecars(source, destination):
     replace = [".nii.gz", ".nii"]
 
     for repl in replace:
-        if repl in source:
+        if source.endswith(repl):
             json_src = source.replace(repl, ".json")
             json_dest = destination.replace(repl, ".json")
             break
@@ -165,6 +165,8 @@ def parse_data(contents, verbose=False, testdebug=False):
                 print("Source already exists in json data")
             source = os.path.join(data['SOURCE'],key)
         else:
+            if verbose:
+                print("No source provided. Defaulting to key from json data")
             source = key
         #If the destination path argument exists then append to the key and overwrites the pre-existing argument
         if args.destpath != None:
@@ -233,10 +235,6 @@ def parse_data(contents, verbose=False, testdebug=False):
                     do_action(json_src, json_dest, args.action,
                               testdebug=args.testdebug,
                               relsym=args.relative_symlink)
-        elif "run-" not in source:
-            print("Could not create map. Check source path")
-            print(f"Source path: {source}")
-
 
 
 
