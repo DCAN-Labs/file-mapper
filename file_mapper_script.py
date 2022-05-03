@@ -136,6 +136,8 @@ def parse_data(contents, verbose=False, testdebug=False):
             if verbose:
                 print("Source already exists in json data")
             source = os.path.join(data['SOURCE'],key)
+        else:
+            source = key
         #If the destination path argument exists then append to the key and overwrites the pre-existing argument
         if args.destpath != None:
             if verbose:
