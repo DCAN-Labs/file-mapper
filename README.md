@@ -16,10 +16,10 @@ This program is designed to help users copy, move, or symlink files from one dir
 ```
 usage: File Mapper [-h] [-a {copy,move,symlink,move+symlink}] [-o] [-s]
                    [-sp SOURCEPATH] [-dp DESTPATH] [-t TEMPLATE] [-td] [-vb]
-                   [-relsym]
+                   [-relsym] [-sc]
                    jsonpath
 
-File Mapper v1.3.0: Script to make a new directory and map files from a source
+File Mapper v1.4.0: Script to make a new directory and map files from a source
 directory. Files can be copied or moved, or the script can make symbolic
 links.
 
@@ -62,6 +62,7 @@ optional arguments:
                         Allows user to chose whether or not the symlink being
                         created is a relative path so that root directories
                         can be moved without the link breaking.
+  -sc, --sidecars       Also copy/move/symlink the corresponding json sidecars
 ```
 
 NOTES:
