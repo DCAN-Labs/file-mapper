@@ -1,5 +1,5 @@
 {
-  "processed/{PIPELINE}/sub-{SUBJECT}/ses-{SESSION}/files/DCANBOLDProc_v4.0.0/analyses_v2/motion/task-rest_power_2014_FD_only.mat": "sub-{SUBJECT}/ses-{SESSION}/func/sub-{SUBJECT}_ses-{SESSION}_task-rest_desc-filtered_motion_mask.mat",
+  "processed/{PIPELINE}/sub-{SUBJECT}/ses-{SESSION}/files/DCANBOLDProc_v4.0.0/analyses_v2/motion/ses-{SESSION}_task-rest_power_2014_FD_only.mat": "sub-{SUBJECT}/ses-{SESSION}/func/sub-{SUBJECT}_ses-{SESSION}_task-rest_desc-filtered_motion_mask.mat",
   "processed/{PIPELINE}/sub-{SUBJECT}/ses-{SESSION}/files/MNINonLinear/Results/ses-{SESSION}_task-rest_DCANBOLDProc_v4.0.0_Atlas.dtseries.nii": "sub-{SUBJECT}/ses-{SESSION}/func/sub-{SUBJECT}_ses-{SESSION}_task-rest_bold_desc-filtered_timeseries.dtseries.nii",
   "processed/{PIPELINE}/sub-{SUBJECT}/ses-{SESSION}/files/MNINonLinear/Results/ses-{SESSION}_task-rest_run-01/ses-{SESSION}_task-rest_run-01_Atlas.dtseries.nii": "sub-{SUBJECT}/ses-{SESSION}/func/sub-{SUBJECT}_ses-{SESSION}_task-rest_run-1_bold_timeseries.dtseries.nii",
   "processed/{PIPELINE}/sub-{SUBJECT}/ses-{SESSION}/files/MNINonLinear/Results/ses-{SESSION}_task-rest_run-02/ses-{SESSION}_task-rest_run-02_Atlas.dtseries.nii": "sub-{SUBJECT}/ses-{SESSION}/func/sub-{SUBJECT}_ses-{SESSION}_task-rest_run-2_bold_timeseries.dtseries.nii",
