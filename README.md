@@ -100,5 +100,7 @@ DESTINATION not provided, using prexisting values in JSON
 File mapping in silent mode using the overwrite and skip errors flags as well as specifying the root source path and root destination path for mapped files.
 
 ```
-user@server:~/file-mapper$ ./file_mapper_script.py ./example2.json -a copy -o -s -sp /folder/containing/source/files/ -dp /folder/to/house/destination/files/ -t SUBJECT=NDARSOMETHING,SESSION=122months,PIPELINE=infant-abcd-bids-pipeline"
+user@server:~/file-mapper$ ./file_mapper_script.py ./example2.json -a copy
+-o -s -sp /folder/containing/source/files/ -dp /folder/to/house/destination/files/
+-t SUBJECT=NDARSOMETHING,SESSION=122months,PIPELINE=infant-abcd-bids-pipeline"
 ```
