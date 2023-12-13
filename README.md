@@ -85,14 +85,14 @@ user@server:~/file-mapper$ ./file_mapper_script.py ./testing.json -a copy -vb
 
 # The SOURCE is included in the json as a key: value path
 Source already exists in json data
-DESTINATION not provided, using prexisting values in JSON
+DESTINATION not provided, using preexisting values in JSON
 
 # Message to show that the path has been made
 Path has been made: /example/mapped/path
 Source already exists in json data
-DESTINATION not provided, using prexisting values in JSON
+DESTINATION not provided, using preexisting values in JSON
 Source already exists in json data
-DESTINATION not provided, using prexisting values in JSON
+DESTINATION not provided, using preexisting values in JSON
 ```
 
 ## Example 2: SOURCE and DESTINATION passed in on the command line with the TEMPLATE option

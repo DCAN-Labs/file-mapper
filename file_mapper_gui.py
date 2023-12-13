@@ -5,7 +5,7 @@
 # Original Author: Vasu Raguram
 # 
 
-#Import the necesarry libraries for the GUI to run.
+#Import the necessary libraries for the GUI to run.
 import sys
 import os
 import json
