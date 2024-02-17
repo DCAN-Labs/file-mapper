@@ -289,6 +289,7 @@ def do_action(src, dest, action, overwrite=False, testdebug=False, relsym=False)
                 os.system(cmd)
             else:
                 sys.exit()
+        validate_filemap(dest)
 
 
 # data should be of the format of json
@@ -330,6 +331,10 @@ def parse_template(template_str, testdebug=False, verbose=False):
         sys.exit()
 
     return template_dict
+
+def validate_filemap(dest_dir):
+    if len(os.listdir(dest_dir)) == 0:
+        raise ValueError("No files were filemapped, check your JSON paths and source/destinations paths")
 
 #defines variables to hold the argparse information so that
 #they can be called later in the for loop
