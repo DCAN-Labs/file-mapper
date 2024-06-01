@@ -210,9 +210,11 @@ def parse_data(contents, verbose=False, testdebug=False):
                     overwrite=args.overwrite, testdebug=args.testdebug, relsym=args.relative_symlink)
                     if args.sidecars:
                         json_src, json_dest = map_sidecars(source, destination)
-                        do_action(json_src, json_dest, args.action,
-                                  testdebug=args.testdebug,
-                                  relsym=args.relative_symlink)
+                        if os.path.isfile(json_src):
+                            do_action(json_src, json_dest, args.action,
+                                      overwrite=args.overwrite,
+                                      testdebug=args.testdebug,
+                                      relsym=args.relative_symlink)
                     if verbose:
                         print("File has been overwritten")
                 elif os.path.exists(dirname):
@@ -222,9 +224,10 @@ def parse_data(contents, verbose=False, testdebug=False):
                 do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
                 if args.sidecars:
                     json_src, json_dest = map_sidecars(source, destination)
-                    do_action(json_src, json_dest, args.action,
-                              testdebug=args.testdebug,
-                              relsym=args.relative_symlink)
+                    if os.path.isfile(json_src):
+                        do_action(json_src, json_dest, args.action,
+                                  testdebug=args.testdebug,
+                                  relsym=args.relative_symlink)
             else:
                 os.makedirs( dirname )
                 if verbose:
@@ -232,9 +235,10 @@ def parse_data(contents, verbose=False, testdebug=False):
                 do_action(source, destination, args.action, testdebug=args.testdebug, relsym=args.relative_symlink)
                 if args.sidecars:
                     json_src, json_dest = map_sidecars(source, destination)
-                    do_action(json_src, json_dest, args.action,
-                              testdebug=args.testdebug,
-                              relsym=args.relative_symlink)
+                    if os.path.isfile(json_src):
+                        do_action(json_src, json_dest, args.action,
+                                  testdebug=args.testdebug,
+                                  relsym=args.relative_symlink)
 
 
 
